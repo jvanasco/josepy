@@ -24,7 +24,6 @@ from typing import (
 
 from cryptography import x509
 from cryptography.hazmat.primitives.serialization import Encoding
-
 from josepy import b64, errors, interfaces, util
 
 logger = logging.getLogger(__name__)

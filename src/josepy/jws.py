@@ -16,6 +16,7 @@ from typing import (
 )
 
 from cryptography import x509
+from cryptography.hazmat.primitives.serialization import Encoding
 
 import josepy
 from josepy import b64, errors, json_util, jwa
@@ -138,7 +139,7 @@ class Header(json_util.JSONObjectWithFields):
 
     @x5c.encoder  # type: ignore
     def x5c(value):
-        return [base64.b64encode(cert.wrapped.public_bytes()) for cert in value]
+        return [base64.b64encode(cert.wrapped.public_bytes(Encoding.DER)) for cert in value]
 
     @x5c.decoder  # type: ignore
     def x5c(value):
