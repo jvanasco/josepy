@@ -73,7 +73,7 @@ class HeaderTest(unittest.TestCase):
 
         header = Header(x5c=(CERT, CERT))
         jobj = header.to_partial_json()
-        assert isinstance(CERT.wrapped, x509.CertificateSigned)
+        assert isinstance(CERT.wrapped, x509.Certificate)
         cert_asn1 = CERT.wrapped.public_bytes(Encoding.DER)
         cert_b64 = base64.b64encode(cert_asn1)
         assert jobj == {"x5c": [cert_b64, cert_b64]}
