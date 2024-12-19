@@ -100,7 +100,7 @@ class ComparableX509:
             if isinstance(self.wrapped, x509.Certificate):
                 return (
                     lambda: datetime.datetime.now(datetime.timezone.utc)
-                    > self.wrapped.not_valid_after
+                    > self.wrapped.not_valid_after_utc
                 )
         return getattr(self.wrapped, name)
 
