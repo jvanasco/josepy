@@ -54,7 +54,7 @@ class ComparableX509:
         if name == "has_expired":
             # a unittest addresses this
             # x509.CertificateSigningRequest does not have this attribute
-            if isinstance(self.wrapped, x509.Certificate)
+            if isinstance(self.wrapped, x509.Certificate):
                 return (
                     lambda: datetime.datetime.now(datetime.timezone.utc)
                     > self.wrapped.not_valid_after_utc
