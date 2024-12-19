@@ -6,15 +6,16 @@ import os
 import sys
 from typing import Any
 
+from OpenSSL import crypto
+
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.serialization import Encoding
-from OpenSSL import crypto
 
 import josepy.util
 from josepy import ComparableRSAKey, ComparableX509
 from josepy.util import ComparableECKey
+
 
 # This approach is based on the recommendation at
 # https://github.com/python/mypy/issues/1153#issuecomment-1207333806.

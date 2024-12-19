@@ -8,10 +8,11 @@ from collections.abc import Hashable, Mapping
 from types import ModuleType
 from typing import Any, Callable, Iterator, List, Tuple, TypeVar, Union, cast
 
+from OpenSSL import crypto
+
 from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 from cryptography.hazmat.primitives.serialization import Encoding
-from OpenSSL import crypto
 
 
 # Deprecated. Please use built-in decorators @classmethod and abc.abstractmethod together instead.
@@ -53,10 +54,11 @@ class ComparableX509:
         if name == "has_expired":
             # a unittest addresses this
             # x509.CertificateSigningRequest does not have this attribute
-            return (
-                lambda: datetime.datetime.now(datetime.timezone.utc)
-                > self.wrapped.not_valid_after_utc
-            )
+            if isinstance(self.wrapped, x509.Certificate)
+                return (
+                    lambda: datetime.datetime.now(datetime.timezone.utc)
+                    > self.wrapped.not_valid_after_utc
+                )
         return getattr(self.wrapped, name)
 
     def _dump(self, filetype: int = crypto.FILETYPE_ASN1) -> bytes:
