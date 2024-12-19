@@ -66,7 +66,7 @@ def load_comparable_cert(*names: str) -> josepy.util.ComparableX509:
     return ComparableX509(load_cert(*names))
 
 
-def load_csr(*names: str) -> x509.CertificateRequest:
+def load_csr(*names: str) -> x509.CertificateSigningRequest:
     """Load certificate request."""
     loader = _guess_loader(names[-1], x509.load_pem_x509_csr, x509.load_der_x509_csr)
     return loader(load_vector(*names))
