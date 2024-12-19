@@ -38,18 +38,21 @@ class ComparableX509:
         assert isinstance(
             wrapped, (crypto.X509, crypto.X509Req, x509.Certificate, x509.CertificateSigningRequest)
         )
+        der: bytes
         if isinstance(wrapped, crypto.X509):
-            der: bytes = crypto.dump_certificate(crypto.FILETYPE_ASN1, wrapped)
+            der = crypto.dump_certificate(crypto.FILETYPE_ASN1, wrapped)
             wrapped = x509.load_der_x509_certificate(der)
 
         elif isinstance(wrapped, crypto.X509Req):
-            der: bytes = crypto.dump_certificate_request(crypto.FILETYPE_ASN1, wrapped)
+            der = crypto.dump_certificate_request(crypto.FILETYPE_ASN1, wrapped)
             wrapped = x509.load_der_x509_csr(der)
 
         self.wrapped = wrapped
 
     def __getattr__(self, name: str) -> Any:
         if name == "has_expired":
+            # a unittest addresses this
+            # x509.CertificateSigningRequest does not have this attribute
             return (
                 lambda: datetime.datetime.now(datetime.timezone.utc)
                 > self.wrapped.not_valid_after_utc
