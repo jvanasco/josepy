@@ -7,13 +7,11 @@ import warnings
 from collections.abc import Hashable, Mapping
 from types import ModuleType
 from typing import Any, Callable, Iterator, List, Tuple, TypeVar, Union, cast
-import warnings
-
-from OpenSSL import crypto
 
 from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 from cryptography.hazmat.primitives.serialization import Encoding
+from OpenSSL import crypto
 
 
 def warn_deprecated(message: str) -> None:
