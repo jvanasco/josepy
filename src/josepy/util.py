@@ -28,7 +28,7 @@ from cryptography.hazmat.primitives.serialization import Encoding
 crypto: Optional[ModuleType] = None
 try:
     from OpenSSL import crypto
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     pass
 
 if TYPE_CHECKING:

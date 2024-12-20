@@ -19,7 +19,7 @@ from josepy.util import ComparableECKey
 crypto: Optional[ModuleType] = None
 try:
     from OpenSSL import crypto
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     pass
 
 
