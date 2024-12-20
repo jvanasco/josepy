@@ -35,6 +35,9 @@ try:
     if _v[0] <= 22:
         if _v[1] <= 2:
             if _v[1] == 0:
+                warnings.warn(
+                    "OpenSSL is available but the version is < 22.2.0", UserWarning, stacklevel=2
+                )
                 crypto = None  # noqa: F811
 except ImportError:
     pass
