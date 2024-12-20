@@ -1618,8 +1618,9 @@ type = ["pytest-mypy"]
 
 [extras]
 docs = ["sphinx", "sphinx-rtd-theme"]
+legacy = ["pyopenssl"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "904009951b538ccdbf58684d413bca84f23b827b91abc9eafa8c66b6772debec"
+content-hash = "d5599353cbbf1b674b54e7b08b471fbca467b1c6907369b341c759c21a3e0c53"
