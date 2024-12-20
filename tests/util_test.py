@@ -21,7 +21,13 @@ except (ImportError, ModuleNotFoundError):
     pass
 
 
-JOSEPY_EXPECT_OPENSSL = bool(int(os.getenv("JOSEPY_EXPECT_OPENSSL", "0")))
+@pytest.fixture
+def _JOSEPY_EXPECT_OPENSSL():
+    # pytest makes this hard
+    return bool(int(os.getenv("JOSEPY_EXPECT_OPENSSL", "0")))
+
+
+JOSEPY_EXPECT_OPENSSL = _JOSEPY_EXPECT_OPENSSL()
 
 
 class ComparableX509Test(unittest.TestCase):
