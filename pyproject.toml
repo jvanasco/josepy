@@ -46,6 +46,7 @@ cryptography = ">=42.0.0"
 # >=4.3.0 is needed for Python 3.10 support
 sphinx = {version = ">=4.3.0", optional = true}
 sphinx-rtd-theme = {version = ">=1.0", optional = true}
+pyopenssl = {version = ">=23.2.0", extras = ["legacy"]}
 
 [tool.poetry.dev-dependencies]
 # coverage[toml] extra is required to read the coverage config from pyproject.toml
@@ -65,11 +66,6 @@ pytest = ">=2.8.0"
 pytest-cov = "*"
 tox = "*"
 twine = "*"
-
-[tool.poetry.optional-dependencies]
-legacy = [
-   "pyopenssl>=23.2.0",
-]
 
 [tool.poetry.extras]
 docs = [
