@@ -11,12 +11,12 @@ on:
 
 jobs:
   build:
-    name: test-${{ matrix.python-version }}-${{ matrix.build-type }}
+    name: test-${{ matrix.python }}-${{ matrix.build-type }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         build-type: ["noopenssl", "legacy"]
 
     steps:
