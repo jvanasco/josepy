@@ -5,12 +5,21 @@ import os
 import sys
 import unittest
 import warnings
+from types import ModuleType
+from typing import Optional
 
 import pytest
 import test_util
-from OpenSSL import crypto
 
 import josepy.util
+
+# conditional import
+crypto: Optional[ModuleType] = None
+try:
+    from OpenSSL import crypto
+except (ImportError, ModuleNotFoundError):
+    pass
+
 
 JOSEPY_EXPECT_OPENSSL = bool(int(os.getenv("JOSEPY_EXPECT_OPENSSL", "0")))
 
@@ -69,6 +78,7 @@ class ComparableX509LegacyTest(unittest.TestCase):
 
     """Legacy tests for josepy.util.ComparableX509."""
 
+    @unittest.skipUnless(JOSEPY_EXPECT_OPENSSL, "Only run in legacy env")
     def test_legacy(self) -> None:
 
         with warnings.catch_warnings(record=True) as warns:
@@ -83,6 +93,7 @@ class ComparableX509LegacyTest(unittest.TestCase):
             assert self._check_loading_warns(warns) is True
             assert isinstance(csr1.wrapped_legacy, crypto.X509Req)
 
+    @unittest.skipUnless(JOSEPY_EXPECT_OPENSSL, "Only run in legacy env")
     def test_filetype_compat(self) -> None:
         assert josepy.util.FILETYPE_ASN1 == crypto.FILETYPE_ASN1
         assert josepy.util.FILETYPE_PEM == crypto.FILETYPE_PEM
