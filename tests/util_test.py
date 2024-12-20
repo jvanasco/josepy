@@ -21,15 +21,6 @@ except (ImportError, ModuleNotFoundError):
     pass
 
 
-@pytest.fixture
-def _JOSEPY_EXPECT_OPENSSL():
-    # pytest makes this hard
-    return bool(int(os.getenv("JOSEPY_EXPECT_OPENSSL", "0")))
-
-
-JOSEPY_EXPECT_OPENSSL = _JOSEPY_EXPECT_OPENSSL()
-
-
 class ComparableX509Test(unittest.TestCase):
     """Tests for josepy.util.ComparableX509."""
 
@@ -84,8 +75,10 @@ class ComparableX509LegacyTest(unittest.TestCase):
 
     """Legacy tests for josepy.util.ComparableX509."""
 
-    @unittest.skipUnless(JOSEPY_EXPECT_OPENSSL, "Only run in legacy env")
+    @pytest.fixture
     def test_legacy(self) -> None:
+        if not bool(int(os.getenv("JOSEPY_EXPECT_OPENSSL", "0"))):
+            self.skipTest("Only run in legacy env")
 
         with warnings.catch_warnings(record=True) as warns:
             warnings.simplefilter("always")
@@ -99,8 +92,9 @@ class ComparableX509LegacyTest(unittest.TestCase):
             assert self._check_loading_warns(warns) is True
             assert isinstance(csr1.wrapped_legacy, crypto.X509Req)
 
-    @unittest.skipUnless(JOSEPY_EXPECT_OPENSSL, "Only run in legacy env")
     def test_filetype_compat(self) -> None:
+        if not bool(int(os.getenv("JOSEPY_EXPECT_OPENSSL", "0"))):
+            self.skipTest("Only run in legacy env")
         assert josepy.util.FILETYPE_ASN1 == crypto.FILETYPE_ASN1
         assert josepy.util.FILETYPE_PEM == crypto.FILETYPE_PEM
 
