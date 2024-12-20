@@ -27,18 +27,7 @@ from cryptography.hazmat.primitives.serialization import Encoding
 # use an alternate name, as the dev environment will always need typing
 crypto: Optional[ModuleType]
 try:
-    # require 22.2.0 due to X509_V_FLAG_NOTIFY_POLICY being dropped
-    import OpenSSL.version
     from OpenSSL import crypto
-
-    _v = [int(i) for i in OpenSSL.version.__version__.split(".")]
-    if _v[0] <= 22:
-        if _v[1] <= 2:
-            if _v[1] == 0:
-                warnings.warn(
-                    "OpenSSL is available but the version is < 22.2.0", UserWarning, stacklevel=2
-                )
-                crypto = None  # noqa: F811
 except ImportError:
     pass
 
