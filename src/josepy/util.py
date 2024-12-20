@@ -25,7 +25,7 @@ from cryptography.hazmat.primitives.serialization import Encoding
 
 # support this as an optional import
 # use an alternate name, as the dev environment will always need typing
-crypto: Optional[ModuleType]
+crypto: Optional[ModuleType] = None
 try:
     from OpenSSL import crypto
 except ImportError:
