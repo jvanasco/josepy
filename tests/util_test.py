@@ -92,6 +92,7 @@ class ComparableX509LegacyTest(unittest.TestCase):
             assert self._check_loading_warns(warns) is True
             assert isinstance(csr1.wrapped_legacy, crypto.X509Req)
 
+    @pytest.fixture
     def test_filetype_compat(self) -> None:
         if not bool(int(os.getenv("JOSEPY_EXPECT_OPENSSL", "0"))):
             self.skipTest("Only run in legacy env")
