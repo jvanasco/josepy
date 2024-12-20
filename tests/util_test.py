@@ -1,6 +1,7 @@
 """Tests for josepy.util."""
 
 import functools
+import os
 import sys
 import unittest
 import warnings
@@ -10,6 +11,8 @@ import test_util
 from OpenSSL import crypto
 
 import josepy.util
+
+JOSEPY_EXPECT_OPENSSL = bool(int(os.getenv("JOSEPY_EXPECT_OPENSSL", "0")))
 
 
 class ComparableX509Test(unittest.TestCase):
