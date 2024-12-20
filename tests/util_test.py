@@ -9,6 +9,8 @@ import pytest
 import test_util
 from OpenSSL import crypto
 
+import josepy.util
+
 
 class ComparableX509Test(unittest.TestCase):
     """Tests for josepy.util.ComparableX509."""
@@ -77,6 +79,10 @@ class ComparableX509LegacyTest(unittest.TestCase):
             csr1 = test_util.load_comparable_csr__pyopenssl("csr.pem")
             assert self._check_loading_warns(warns) is True
             assert isinstance(csr1.wrapped_legacy, crypto.X509Req)
+
+    def test_filetype_compat(self) -> None:
+        assert josepy.util.FILETYPE_ASN1 == crypto.FILETYPE_ASN1
+        assert josepy.util.FILETYPE_PEM == crypto.FILETYPE_PEM
 
 
 class ComparableRSAKeyTest(unittest.TestCase):
