@@ -42,9 +42,11 @@ python = "^3.8"
 # load_pem_private/public_key (>=0.6)
 # rsa_recover_prime_factors (>=0.8)
 # add sign() and verify() to asymetric keys (RSA >=1.4, ECDSA >=1.5)
-cryptography = ">=1.5"
+# add not_valid_after_utc() in (>=42.0.0)
+cryptography = ">=42.0.0"
 # Connection.set_tlsext_host_name (>=0.13)
-pyopenssl = ">=0.13"
+# incompatibilities with cryptography; X509_V_FLAG_NOTIFY_POLICY removed (>=23.2.0)
+pyopenssl = {version = ">=23.2.0", optional=true}
 # >=4.3.0 is needed for Python 3.10 support
 sphinx = {version = ">=4.3.0", optional = true}
 sphinx-rtd-theme = {version = ">=1.0", optional = true}
@@ -73,9 +75,16 @@ docs = [
     "sphinx",
     "sphinx-rtd-theme",
 ]
+legacy = [
+    "pyopenssl",
+]
 
 [tool.poetry.scripts]
 jws = "josepy.jws:CLI.run"
+
+# pyopenssl is only needed for testing
+[tool.poetry.group.dev.dependencies]
+pyopenssl = ">=23.2.0"
 
 # Black tooling configuration
 [tool.black]
