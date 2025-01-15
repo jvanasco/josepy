@@ -5,10 +5,27 @@ import sys
 import warnings
 from collections.abc import Hashable, Mapping
 from types import ModuleType
-from typing import Any, Callable, Iterator, List, Tuple, TypeVar, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Iterator,
+    List,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+)
 
+from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
+from cryptography.hazmat.primitives.serialization import Encoding
 from OpenSSL import crypto
+
+
+def warn_deprecated(message: str) -> None:
+    # used to warn for deprecation
+    warnings.warn(message, DeprecationWarning, stacklevel=2)
 
 
 # Deprecated. Please use built-in decorators @classmethod and abc.abstractmethod together instead.
@@ -17,16 +34,96 @@ def abstractclassmethod(func: Callable) -> classmethod:
 
 
 class ComparableX509:
-    """Wrapper for OpenSSL.crypto.X509** objects that supports __eq__.
+    """A wrapper for OpenSSL.crypto.X509** objects that supports __eq__.
 
-    :ivar wrapped: Wrapped certificate or certificate request.
-    :type wrapped: `OpenSSL.crypto.X509` or `OpenSSL.crypto.X509Req`.
+    ComparableX509 objects may be instantiated with a legacy OpenSSL.crypto
+    object OR their modern cryptography.x509 equivalents.
 
+    This class is deprecated and will be removed in a future release. Projects
+    should migrate to using raw cryptography.x509 objects instead.
+
+
+
+    :ivar wrapped: Wrapped certificate or certificate request as a
+        `OpenSSL.crypto` object.
+    :type wrapped: `OpenSSL.crypto.X509` or `OpenSSL.crypto.X509`
+    :ivar wrapped_legacy: actual storage for wrapped pyopenssl objects
+    :type wrapped_legacy: `OpenSSL.crypto.X509` or `OpenSSL.crypto.X509Req`
+    :ivar _wrapped_new: actual storage for wrapped cryptography objects
+    :type _wrapped_new: `cryptography.x509.Certificate` or
+         `cryptography.x509.CertificateSigningRequest`
     """
 
-    def __init__(self, wrapped: Union[crypto.X509, crypto.X509Req]) -> None:
-        assert isinstance(wrapped, crypto.X509) or isinstance(wrapped, crypto.X509Req)
-        self.wrapped = wrapped
+    _wrapped_new: Union[x509.Certificate, x509.CertificateSigningRequest, None] = None
+    _wrapped_legacy: Union[crypto.X509, crypto.X509Req, None] = None
+
+    def __init__(
+        self,
+        wrapped: Union[
+            crypto.X509,
+            crypto.X509Req,
+            x509.Certificate,
+            x509.CertificateSigningRequest,
+        ],
+    ) -> None:
+        """__init__ has been expanded to accept `Cryptogarphy.x509` objects to
+        help users migrate.
+        """
+        warn_deprecated(
+            "`josepy.util.ComparableX509` objects are deprecated and will be "
+            "removed in a future verison. Please use `Cryptogatphy.x509` objects "
+            "directly when utilizing functions in this library."
+        )
+        if isinstance(wrapped, (crypto.X509, crypto.X509Req)):
+            # stash for legacy operations
+            self._wrapped_legacy = wrapped
+        else:
+            # this is a x509 AND we have pyOpenSSL
+            self._wrapped_new = wrapped
+
+    @property
+    def wrapped_new(
+        self,
+    ) -> Union[
+        x509.Certificate,
+        x509.CertificateSigningRequest,
+    ]:
+        if self._wrapped_new is None:
+            # convert to Cryptography.x509
+            der: bytes
+            if isinstance(self._wrapped_legacy, crypto.X509):
+                der = crypto.dump_certificate(crypto.FILETYPE_ASN1, self._wrapped_legacy)
+                self._wrapped_new = x509.load_der_x509_certificate(der)
+
+            elif isinstance(self._wrapped_legacy, crypto.X509Req):
+                der = crypto.dump_certificate_request(crypto.FILETYPE_ASN1, self._wrapped_legacy)
+                self._wrapped_new = x509.load_der_x509_csr(der)
+        if TYPE_CHECKING:
+            assert isinstance(self._wrapped_new, (x509.Certificate, x509.CertificateSigningRequest))
+        return self._wrapped_new
+
+    @property
+    def wrapped(
+        self,
+    ) -> Union[
+        crypto.X509,
+        crypto.X509Req,
+    ]:
+        """For backwards compatibility returns a `pyOpenSSL` object,
+        even if this object was instantiated with a `Cryptogrphy` object.
+        """
+        if self._wrapped_legacy is None:
+            if isinstance(self.wrapped_new, x509.Certificate):
+                self._wrapped_legacy = crypto.load_certificate(
+                    crypto.FILETYPE_ASN1, self.wrapped_new.public_bytes(Encoding.DER)
+                )
+            elif isinstance(self.wrapped_new, x509.CertificateSigningRequest):
+                self._wrapped_legacy = crypto.load_certificate_request(
+                    crypto.FILETYPE_ASN1, self.wrapped_new.public_bytes(Encoding.DER)
+                )
+        if TYPE_CHECKING:
+            assert isinstance(self._wrapped_legacy, (crypto.X509, crypto.X509Req))
+        return self._wrapped_legacy
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self.wrapped, name)
@@ -36,18 +133,18 @@ class ComparableX509:
 
         :param int filetype: The desired encoding. Should be one of
             `OpenSSL.crypto.FILETYPE_ASN1`,
-            `OpenSSL.crypto.FILETYPE_PEM`, or
-            `OpenSSL.crypto.FILETYPE_TEXT`.
+            `OpenSSL.crypto.FILETYPE_PEM`
 
         :returns: Encoded X509 object.
         :rtype: bytes
 
         """
-        if isinstance(self.wrapped, crypto.X509):
-            return crypto.dump_certificate(filetype, self.wrapped)
-
-        # assert in __init__ makes sure this is X509Req
-        return crypto.dump_certificate_request(filetype, self.wrapped)
+        # deprecated `FILETYPE_TEXT`
+        if filetype not in (crypto.FILETYPE_ASN1, crypto.FILETYPE_PEM):
+            raise ValueError("filetype `%s` is deprecated")
+        if filetype == crypto.FILETYPE_ASN1:
+            return self.wrapped_new.public_bytes(Encoding.DER)
+        return self.wrapped_new.public_bytes(Encoding.PEM)
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, self.__class__):
@@ -58,7 +155,7 @@ class ComparableX509:
         return hash((self.__class__, self._dump()))
 
     def __repr__(self) -> str:
-        return "<{0}({1!r})>".format(self.__class__.__name__, self.wrapped)
+        return "<{0}({1!r})>".format(self.__class__.__name__, self.wrapped_new)
 
 
 class ComparableKey:

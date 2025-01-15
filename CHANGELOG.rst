@@ -1,6 +1,23 @@
 Changelog
 =========
 
+This PR
+----------
+* Deprecated pyOpenSSL in favor of Cryptography.
+* Deprecated the following for removal in the next scheduled release:
+    `josepy.util.ComparableX509`
+* The following functions now accept a `josepy.util.ComparableX509` OR a
+  `cryptography.x509.Certificate`:
+    - `josepy.json_util.encode_cert`
+* The following functions now accept a `josepy.util.ComparableX509` OR a
+  `cryptography.x509.CertificateSigningRequest`:
+    - `josepy.json_util.encode_csr`
+* Added the following functions:
+    - `josepy.json_util.decode_cert_cryptography`
+    - `josepy.json_util.decode_csr_cryptography`
+* x5c headers are now raw Cryptography objects
+
+
 1.15.0 (master)
 ---------------
 * Added support for Python 3.13.

@@ -20,9 +20,11 @@ from typing import (
     Optional,
     Type,
     TypeVar,
+    Union,
 )
 
-from OpenSSL import crypto
+from cryptography import x509
+from cryptography.hazmat.primitives.serialization import Encoding
 
 from josepy import b64, errors, interfaces, util
 
@@ -426,59 +428,104 @@ def decode_hex16(value: str, size: Optional[int] = None, minimum: bool = False) 
         raise errors.DeserializationError(error)
 
 
-def encode_cert(cert: util.ComparableX509) -> str:
+def encode_cert(cert: Union[util.ComparableX509, x509.Certificate]) -> str:
     """Encode certificate as JOSE Base-64 DER.
 
-    :type cert: `OpenSSL.crypto.X509` wrapped in `.ComparableX509`
+    :type cert: `cryptography.x509.Certificate`
     :rtype: unicode
 
     """
-    if isinstance(cert.wrapped, crypto.X509Req):
+    if isinstance(cert, util.ComparableX509):
+        # DEPRECATED; remove in next release
+        util.warn_deprecated(
+            """`josepy.json_util.encode_cert` has deprecated support for"""
+            """util.ComparableX509 objects. Please use """
+            """`cryptography.x509.Certificate` objects instead."""
+        )
+        if isinstance(cert.wrapped_new, x509.CertificateSigningRequest):
+            raise ValueError("Error input is actually a certificate request.")
+        return encode_b64jose(cert.wrapped_new.public_bytes(Encoding.DER))
+    if isinstance(cert, x509.CertificateSigningRequest):
         raise ValueError("Error input is actually a certificate request.")
-
-    return encode_b64jose(crypto.dump_certificate(crypto.FILETYPE_ASN1, cert.wrapped))
+    return encode_b64jose(cert.public_bytes(Encoding.DER))
 
 
 def decode_cert(b64der: str) -> util.ComparableX509:
     """Decode JOSE Base-64 DER-encoded certificate.
 
     :param unicode b64der:
-    :rtype: `OpenSSL.crypto.X509` wrapped in `.ComparableX509`
+    :rtype: `cryptography.x509.Certificate` wrapped in `.ComparableX509`
 
     """
+    util.warn_deprecated(
+        """`josepy.json_util.decode_cert` has been deprecated and will be removed"""
+        """in a future release. please use `josepy.json_util.decode_cert_cryptography`"""
+        """instead."""
+    )
     try:
-        return util.ComparableX509(
-            crypto.load_certificate(crypto.FILETYPE_ASN1, decode_b64jose(b64der))
-        )
-    except crypto.Error as error:
+        return util.ComparableX509(x509.load_der_x509_certificate(decode_b64jose(b64der)))
+    except Exception as error:
         raise errors.DeserializationError(error)
 
 
-def encode_csr(csr: util.ComparableX509) -> str:
+def decode_cert_cryptography(b64der: str) -> x509.Certificate:
+    """Decode JOSE Base-64 DER-encoded certificate.
+
+    :param unicode b64der:
+    :rtype: `cryptography.x509.Certificate`
+
+    """
+    try:
+        return x509.load_der_x509_certificate(decode_b64jose(b64der))
+    except Exception as error:
+        raise errors.DeserializationError(error)
+
+
+def encode_csr(csr: Union[util.ComparableX509, x509.CertificateSigningRequest]) -> str:
     """Encode CSR as JOSE Base-64 DER.
 
-    :type csr: `OpenSSL.crypto.X509Req` wrapped in `.ComparableX509`
+    :type csr: `cryptography.x509.CertificateSigningRequest`
     :rtype: unicode
 
     """
-    if isinstance(csr.wrapped, crypto.X509):
+    if isinstance(csr, util.ComparableX509):
+        # DEPRECATED; remove in next release
+        util.warn_deprecated(
+            """`josepy.json_util.encode_csr` has deprecated support for"""
+            """util.ComparableX509 objects. Please use """
+            """`cryptography.x509.CertificateSigningRequest` objects instead."""
+        )
+        if isinstance(csr.wrapped_new, x509.Certificate):
+            raise ValueError("Error input is actually a certificate.")
+        return encode_b64jose(csr.wrapped_new.public_bytes(Encoding.DER))
+    if isinstance(csr, x509.Certificate):
         raise ValueError("Error input is actually a certificate.")
-
-    return encode_b64jose(crypto.dump_certificate_request(crypto.FILETYPE_ASN1, csr.wrapped))
+    return encode_b64jose(csr.public_bytes(Encoding.DER))
 
 
 def decode_csr(b64der: str) -> util.ComparableX509:
     """Decode JOSE Base-64 DER-encoded CSR.
 
     :param unicode b64der:
-    :rtype: `OpenSSL.crypto.X509Req` wrapped in `.ComparableX509`
+    :rtype: `cryptography.x509.CertificateSigningRequest` wrapped in `.ComparableX509`
 
     """
     try:
-        return util.ComparableX509(
-            crypto.load_certificate_request(crypto.FILETYPE_ASN1, decode_b64jose(b64der))
-        )
-    except crypto.Error as error:
+        return util.ComparableX509(x509.load_der_x509_csr(decode_b64jose(b64der)))
+    except Exception as error:
+        raise errors.DeserializationError(error)
+
+
+def decode_csr_cryptography(b64der: str) -> x509.CertificateSigningRequest:
+    """Decode JOSE Base-64 DER-encoded CSR.
+
+    :param unicode b64der:
+    :rtype: `cryptography.x509.CertificateSigningRequest`
+
+    """
+    try:
+        return x509.load_der_x509_csr(decode_b64jose(b64der))
+    except Exception as error:
         raise errors.DeserializationError(error)
 
 

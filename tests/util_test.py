@@ -7,6 +7,8 @@ import warnings
 
 import pytest
 import test_util
+from cryptography import x509
+from OpenSSL import crypto
 
 
 class ComparableX509Test(unittest.TestCase):
@@ -51,8 +53,70 @@ class ComparableX509Test(unittest.TestCase):
         assert hash(self.cert1) != hash(self.cert_other)
 
     def test_repr(self) -> None:
-        for x509 in self.req1, self.cert1:
-            assert repr(x509) == "<ComparableX509({0!r})>".format(x509.wrapped)
+        for cert in (self.req1, self.cert1):
+            assert repr(cert) == "<ComparableX509({0!r})>".format(cert.wrapped_new)
+
+    def test_legacy_cert(self) -> None:
+        # check default
+        assert isinstance(self.cert1.wrapped, crypto.X509)
+        # check explicit
+        assert isinstance(self.cert1._wrapped_legacy, crypto.X509)
+        assert isinstance(self.cert1.wrapped_new, x509.Certificate)
+
+    def test_legacy_csr(self) -> None:
+        # check default first, as it will populate
+        assert isinstance(self.req1.wrapped, crypto.X509Req)
+        # check explicit
+        assert isinstance(self.req1._wrapped_legacy, crypto.X509Req)
+        assert isinstance(self.req1.wrapped_new, x509.CertificateSigningRequest)
+
+
+class ComparableX509LegacyTest(unittest.TestCase):
+
+    def _check_loading_warns(self, warnlist: list) -> bool:
+        _found = False
+        for w in warnlist:
+            if isinstance(w.message, DeprecationWarning):
+                if isinstance(w.message.args[0], str):
+                    if w.message.args[0].startswith(
+                        "`josepy.util.ComparableX509` objects are deprecated"
+                    ):
+                        _found = True
+                        break
+        return _found
+
+    """Legacy tests for josepy.util.ComparableX509."""
+
+    def test_legacy(self) -> None:
+
+        with warnings.catch_warnings(record=True) as warns:
+            warnings.simplefilter("always")
+
+            # load pyopenssl
+            cert1 = test_util.load_comparable_cert__pyopenssl("cert.pem")
+            assert self._check_loading_warns(warns) is True
+            assert isinstance(cert1.wrapped, crypto.X509)
+            assert isinstance(cert1.wrapped_new, x509.Certificate)
+
+            # load cryptography
+            cert2 = test_util.load_comparable_cert("cert.pem")
+            assert self._check_loading_warns(warns) is True
+            assert isinstance(cert2.wrapped, crypto.X509)
+            assert isinstance(cert2.wrapped_new, x509.Certificate)
+
+        with warnings.catch_warnings(record=True) as warns:
+            warnings.simplefilter("always")
+
+            # load pyopenssl
+            csr1 = test_util.load_comparable_csr__pyopenssl("csr.pem")
+            assert self._check_loading_warns(warns) is True
+            assert isinstance(csr1.wrapped, crypto.X509Req)
+            assert isinstance(csr1.wrapped_new, x509.CertificateSigningRequest)
+
+            csr2 = test_util.load_comparable_csr("csr.pem")
+            assert self._check_loading_warns(warns) is True
+            assert isinstance(csr2.wrapped, crypto.X509Req)
+            assert isinstance(csr2.wrapped_new, x509.CertificateSigningRequest)
 
 
 class ComparableRSAKeyTest(unittest.TestCase):
